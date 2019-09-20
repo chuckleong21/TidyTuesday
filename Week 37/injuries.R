@@ -5,7 +5,6 @@ library(cowplot)
 
 df_injuries <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-09-10/tx_injuries.csv", 
                                na = c("n/a", "NA", "N/A"))
-date_parse <- quote(as_date(as.numeric(injury_date), origin = "1900-01-01"))
 
 body_list <- read_html("https://www.enchantedlearning.com/wordlist/body.shtml") %>% 
         html_nodes(".wordlist-item") %>% 
