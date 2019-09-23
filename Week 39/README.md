@@ -1,1 +1,1 @@
-![WIP](WIP.png)
+![WIP](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2039/WIP.jpg)
