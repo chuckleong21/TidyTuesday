@@ -7,7 +7,7 @@ nodes <- map(c("rise", "cause") , ~{
         emperors %>% distinct(!!sym(.x)) %>% rename(label = .x)
 }) %>% 
         tibble() %>% 
-        unnest() %>% 
+        unnest(data = ., cols = .) %>% 
         distinct() %>% 
         rowid_to_column("id")
 
@@ -19,6 +19,9 @@ edges <- emperors %>%
         left_join(nodes, by = c("cause" = "label")) %>% 
         rename(to = id) %>% 
         select(from, to, weight)
+
+edgecol <- RColorBrewer::brewer.pal(length(unique(edges$from)), name = "Set1")
+edgecol <- setNames(unique(edges$from), edgecol)
 
 tbl_graph(nodes = nodes, edges = edges, directed = TRUE) %>% 
         activate(edges) %>% 
@@ -32,7 +35,8 @@ tbl_graph(nodes = nodes, edges = edges, directed = TRUE) %>%
         geom_edge_arc(aes(width = weight, color = color), 
                       alpha = .5, show.legend = FALSE) +
         geom_node_text(aes(label = label), repel = TRUE, size = 3) +
-        scale_edge_width(range = c(0.1, 2)) +
+        scale_edge_width(range = c(0.1, 2)) + 
+        # scale_edge_color_brewer(palette = "Set1") +
         theme_graph() +
         labs(title = str_to_title("the beginning and the end of emperors"),
              subtitle = str_wrap("Below is a network graph illustrating the rise and fall of emperors. It is distinguishable that quite a number of Roman emperors rose from birthright, and they fell because of the inevitable or assassinations.", 70),
