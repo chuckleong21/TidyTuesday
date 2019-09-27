@@ -12,8 +12,6 @@ df_school_diversity <-
         janitor::clean_names() %>% 
         select(leaid, st, school_year, diverse) %>% 
         filter(st != "DC") %>% 
-        # mutate(school_year = ifelse(school_year == "1994-1995", "before", "after")) %>% 
-        # pivot_wider(leaid, school_year, values_from = diverse) %>% 
         count(leaid, st, school_year, diverse, name = "freq")
 
 # should implicit missing values be filled?
@@ -64,5 +62,3 @@ df_school_diversity %>%
               strip.text = element_text(size = 14))
 
 ggsave(here::here("Week 39", "diversity.png"), height = 29.9, width = 42.9, units = "cm")
-
-
