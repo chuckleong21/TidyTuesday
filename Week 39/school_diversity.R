@@ -13,15 +13,16 @@ df_school_diversity <-
         # mutate(school_year = ifelse(school_year == "1994-1995", "before", "after")) %>% 
         # pivot_wider(leaid, school_year, values_from = diverse) %>% 
         count(leaid, st, school_year, diverse, name = "freq")
-        
-df_school_nebraska <- 
-        df_school_diversity %>% 
-        filter(st == "NE") %>% 
-        complete(leaid, school_year, fill = list(st = "NE", freq = 1))
 
-df_school_diversity %<>% 
-        filter(st != "NE") %>% 
-        bind_rows(df_school_nebraska)
+# should implicit missing values be filled?
+# df_school_nebraska <- 
+#         df_school_diversity %>% 
+#         filter(st == "NE") %>% 
+#         complete(leaid, school_year, fill = list(st = "NE", freq = 1))
+
+# df_school_diversity %<>% 
+#         filter(st != "NE") %>% 
+#         bind_rows(df_school_nebraska)
 
 
 sub <- str_wrap("Below is the visualization for changes in racial diversity 
@@ -36,20 +37,22 @@ df_school_diversity %>%
                    alluvium = leaid, 
                    y = freq, 
                    fill = diverse)) + 
-        geom_flow() + 
+        geom_flow(alpha = .7) + 
         geom_stratum() + 
         scale_x_discrete(expand = c(0, 0)) +
         scale_fill_manual(name = "", 
                           limits = c("Extremely undiverse", "Undiverse", "Diverse"), 
                           values = c("firebrick", "darkorange", "forestgreen")) +
         facet_wrap(~st, scales = "free_y", nrow = 10, ) +
-        theme_minimal(base_size = 16, base_family = "Nimrod Cyr-Bold") + 
+        theme_minimal(base_family = "Nimrod Cyr-Bold") + 
         labs(x = "", y = "", 
              title = str_to_title("baby steps: more racial-diverse schools"), 
-             subtitle = sub) + 
+             subtitle = sub, 
+             caption = "Data: NCES | Graphic: @chucc900") + 
         theme(plot.margin = margin(20, 20, 20, 10), 
               plot.title = element_text(size = 28), 
               plot.subtitle = element_text(size = 20),
+              plot.caption = element_text(size = 18),
               panel.grid = element_blank(), 
               legend.position = c(.9, 1.15),
               legend.key.size = unit(.8, "cm"), 
