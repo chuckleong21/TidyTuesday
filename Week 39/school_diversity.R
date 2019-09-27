@@ -2,6 +2,8 @@ library(tidyverse)
 library(ggalluvial)
 
 # df_school_diversity <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-09-24/school_diversity.csv")
+# This plot requires Nimrod.ttf provided in the git
+
 # speed up data loading through local file
 df_raw <- read_csv(here::here("Week 39", "school_diversity.csv"))
 
