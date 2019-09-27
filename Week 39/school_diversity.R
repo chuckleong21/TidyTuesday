@@ -43,7 +43,7 @@ df_school_diversity %>%
         scale_fill_manual(name = "", 
                           limits = c("Extremely undiverse", "Undiverse", "Diverse"), 
                           values = c("firebrick", "darkorange", "forestgreen")) +
-        facet_wrap(~st, scales = "free_y", nrow = 10, ) +
+        facet_wrap(~st, scales = "free_y", nrow = 10) +
         theme_minimal(base_family = "Nimrod Cyr-Bold") + 
         labs(x = "", y = "", 
              title = str_to_title("baby steps: more racial-diverse schools"), 
