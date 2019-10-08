@@ -1,7 +1,13 @@
-<h1 style="font-family:American Typewriter">Previous Contributions<h1>
+# Previous Contributions
 
-<img src="https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2038/national_park.gif"><span style="font-family:American Typewriter; font-size:75%">Week 38</span></img>
+## racial diversity in school
+![Week 39](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2039/diversity.png)
 
-<img src="https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2037/injuries.png"><span style="font-family:American Typewriter; font-size:75%">Week 37</span></img>
+## national park visits
+![Week 38](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2038/national_park.gif)
 
-<img src="https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2036/moore's_law.png"><span style="font-family:American Typewriter; font-size:75%">Week 36</span></img>
+## amusement parks injuries
+![Week 37](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2037/injuries.png)
+
+## Moore's Law
+![Week 36](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2036/moore's_law.png)
