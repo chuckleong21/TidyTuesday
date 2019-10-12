@@ -156,7 +156,8 @@ benches, squats and deadlifts. Athletes equipped with single-plys are likely to
 lift heavier weights than those compete with bare hands. This advantage persists 
 for older athletes, even though their sport performance slowly decreases."
 
-beeswarms <- ggplot() +
+beeswarms <- 
+        ggplot() +
         geom_quasirandom(data = df_lifts_beeswarm, 
                          aes(age_class, max_weight_kg, color = sex),
                          alpha = .5, size = 2) + 
@@ -194,7 +195,9 @@ beeswarms <- ggplot() +
 
 # add caption under legend
 legend_txt <- "The smooth lines fitted maximum weights \never lifted merely for displaying trends"
-legend_caption <- textGrob(legend_txt, hjust = 0, gp = gpar(fontsize = 9, fontfamily = "ImpactaLL"))
+# legend_caption <- textGrob(legend_txt, hjust = 0, gp = gpar(fontsize = 9, fontfamily = "ImpactaLL"))
+legend_caption <- textGrob(legend_txt, hjust = 0, x = .65, y = .73,
+                           gp = gpar(fontsize = 9, fontfamily = "ImpactaLL"))
 
 # YazidKurdi's approach for footnote of legend
 annotation_custom2 <- 
@@ -207,8 +210,6 @@ annotation_custom2 <-
                                                         ymin = ymin, ymax = ymax))
         }
 
-legend_caption <- textGrob(legend_txt, hjust = 0, x = .65, y = .73,
-                           gp = gpar(fontsize = 9, fontfamily = "ImpactaLL"))
 p <- beeswarms + annotation_custom2(data = df_lifts_beeswarm %>%
                                filter(equipment == "Single-ply", perform == "deadlift"), 
                        grob = legend_caption)
