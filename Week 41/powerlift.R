@@ -1,4 +1,5 @@
 # this script requires extra fonts ImpactaLL
+# pkgs & data ----------
 library(tidyverse)
 library(janitor)
 library(waffle)
@@ -93,7 +94,7 @@ sub_line <-
          80s for <span style='color:#4876FF'>men</span> and 90s for <span style='color:#AB82FF'>women</span>.
         More participants <br></br>compete around the age 30s as the graph shows."
 
-p1 <- df_lifts_inc %>% 
+lines <- df_lifts_inc %>% 
         ggplot(aes(year, incr, color = sex)) + 
         geom_line(size = 1.2) + 
         geom_hline(aes(yintercept = avgincr, color = sex), linetype = 2) + 
@@ -114,7 +115,7 @@ p1 <- df_lifts_inc %>%
                 caption = "Data: Open Powerlifting | Graphic: @chucc900"
              )
 
-ggsave(here::here("Week 41", "ipf_ageclass.png"), p1,
+ggsave(here::here("Week 41", "ipf_ageclass.png"), lines,
        width = 30.9, height = 20, units = "cm")
 
 # beeswarm ------
@@ -155,7 +156,7 @@ benches, squats and deadlifts. Athletes equipped with single-plys are likely to
 lift heavier weights than those compete with bare hands. This advantage persists 
 for older athletes, even though their sport performance slowly decreases."
 
-p2 <- ggplot() +
+beeswarms <- ggplot() +
         geom_quasirandom(data = df_lifts_beeswarm, 
                          aes(age_class, max_weight_kg, color = sex),
                          alpha = .5, size = 2) + 
@@ -191,11 +192,30 @@ p2 <- ggplot() +
                 axis.text.x = element_text(size = 12, angle = 30)
               )
 
+# add caption under legend
 legend_txt <- "The smooth lines fitted maximum weights \never lifted merely for displaying trends"
 legend_caption <- textGrob(legend_txt, hjust = 0, gp = gpar(fontsize = 9, fontfamily = "ImpactaLL"))
 
-p2 <- ggdraw(p2) + 
-        draw_grob(legend_caption, hjust = -.325, vjust = .03) 
+# YazidKurdi's approach for footnote of legend
+annotation_custom2 <- 
+        function (grob, xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf, data) 
+        {
+                layer(data = data, stat = StatIdentity, position = PositionIdentity, 
+                      geom = ggplot2:::GeomCustomAnn,
+                      inherit.aes = TRUE, params = list(grob = grob, 
+                                                        xmin = xmin, xmax = xmax, 
+                                                        ymin = ymin, ymax = ymax))
+        }
 
-ggsave(here::here("Week 41", "ipf_age_effect.png"), p2,
-               height = 20.9, width = 33.4, units = "cm")
+legend_caption <- textGrob(legend_txt, hjust = 0, x = .65, y = .73,
+                           gp = gpar(fontsize = 9, fontfamily = "ImpactaLL"))
+p <- beeswarms + annotation_custom2(data = df_lifts_beeswarm %>%
+                               filter(equipment == "Single-ply", perform == "deadlift"), 
+                       grob = legend_caption)
+
+ggsave(here::here("Week 41", "ipf_age_effect.png"), p,
+       height = 20.9, width = 33.4, units = "cm")
+
+# the cowplot approach | not as flexible as annotation_custom2()
+# p <- ggdraw(beeswarms) + 
+#         draw_grob(legend_caption, hjust = -.325, vjust = .03) 
