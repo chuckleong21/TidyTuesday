@@ -1,4 +1,7 @@
+# this script requires extra fonts ImpactaLL
 library(tidyverse)
+library(janitor)
+library(waffle)
 library(ggbeeswarm)
 library(ggtext)
 library(grid)
@@ -6,9 +9,67 @@ library(cowplot)
 
 df_lifts_raw <- read_csv(here::here("Week 41", "ipf_lifts.csv"))
 
-take_median <- function(x) {
-        map_dbl(strsplit(x, "-"), ~median(as.numeric(.x)))
-}
+# waffle -----
+df_lifts_waffle <- 
+        df_lifts_raw %>% 
+        mutate(year = lubridate::year(date)) %>% 
+        tabyl(year, sex) %>% 
+        adorn_percentages() %>% 
+        gather(sex, n, 2:3) %>% 
+        mutate(n = round(n * 100))
+
+# sprintf("%03d") pads enough zeros for numbers so they are strings of length 3
+waffle_png <- here::here("Week 41", paste0("waffle_", sprintf("%03d", seq_len(t)), ".png"))
+
+title_waffle <- "Women are taking part in powerlifting"
+sub_waffle <- "<span style='color:#AB82FF'>Women</span> first participated powerlifting 
+                        competitions in 1980, <br></br>before then it was <span style='color:#4876FF'>men</span> 
+                        dominated the scene. More females <br></br>took part in powerlifting events 
+                        over the decade in 2010s. <br></br>By 2019 42% lifters are females, the proportion increases 
+                       <br></br>more than 10% since 1980."
+
+# waffle charts
+waffles <- 
+        map(unique(df_lifts_waffle$year), ~{
+                waffle <- 
+                        df_lifts_waffle %>% 
+                        filter(year == .x) %>% 
+                        ggplot(aes(fill = sex, values = n)) + 
+                        geom_waffle(color = "white", size = .25, n_rows = 10) + 
+                        geom_text(aes(label = year), x = 5.5, y = 5.5, size = 40, 
+                                  color = "#4169E1", family = "Impact") + 
+                        scale_x_discrete() + 
+                        scale_y_continuous(labels = function(x) x *10) + 
+                        scale_fill_manual(name = "", values = c("mediumpurple1", "royalblue1")) +
+                        theme_minimal(base_size = 16, base_family = "Impact") +
+                        labs(
+                                x = "1 square = 1%", y = "",
+                                title = title_waffle, 
+                                subtitle = sub_waffle, 
+                                caption = "Data: Open Powerlifting | Graphic: @chucc900"
+                        ) + 
+                        theme(
+                                plot.margin = margin(20, 20, 20, 20),
+                                plot.title = element_markdown(size = 28),
+                                plot.subtitle = element_markdown(size = 24),
+                                panel.grid = element_blank(), 
+                                axis.text.y = element_blank(), 
+                                legend.position = "None", 
+                                legend.key.size = unit(30, "pt")
+                        )
+                if(.x == 1979) {
+                        waffle + annotate("text", x = 5.5, y = 2.5, size = 12, family = "Impact",
+                                          label = "IPF added women's competition")
+                } else waffle
+        })
+
+# save them. map2() returns a list of NULL
+walk2(waffle_png, waffles, ggsave, width = 25, height = 15, units = "cm")
+
+
+setwd(here::here("Week 41"))
+system("convert -delay 40 waffle_*.png ipf_waffle.gif")
+invisible(file.remove(list.files()[grepl("waffle_.*\\.png", list.files())]))
 
 # line -----
 df_lifts_inc <- 
@@ -32,7 +93,7 @@ sub_line <-
          80s for <span style='color:#4876FF'>men</span> and 90s for <span style='color:#AB82FF'>women</span>.
         More participants <br></br>compete around the age 30s as the graph shows."
 
-df_lifts_inc %>% 
+p1 <- df_lifts_inc %>% 
         ggplot(aes(year, incr, color = sex)) + 
         geom_line(size = 1.2) + 
         geom_hline(aes(yintercept = avgincr, color = sex), linetype = 2) + 
@@ -53,7 +114,8 @@ df_lifts_inc %>%
                 caption = "Data: Open Powerlifting | Graphic: @chucc900"
              )
 
-ggsave(here::here("Week 41", "ipf_ageclass.png"), width = 30.9, height = 20, units = "cm")
+ggsave(here::here("Week 41", "ipf_ageclass.png"), p1,
+       width = 30.9, height = 20, units = "cm")
 
 # beeswarm ------
 df_lifts_filter <- 
@@ -89,10 +151,11 @@ xlbl <- df_lifts_filter %>%
 
 title_beeswarm <- "Gear up for better performance!"
 sub_beeswarm <- "The following graph shows how age and equipment affect atheletes' performances on 
-                benches, squats and deadlifts. Athletes equipped with single-plys are likely to lift 
-                heavier weights than those compete with bare hands."
+benches, squats and deadlifts. Athletes equipped with single-plys are likely to 
+lift heavier weights than those compete with bare hands. This advantage persists 
+for older athletes, even though their sport performance slowly decreases."
 
-p <- ggplot() +
+p2 <- ggplot() +
         geom_quasirandom(data = df_lifts_beeswarm, 
                          aes(age_class, max_weight_kg, color = sex),
                          alpha = .5, size = 2) + 
@@ -102,7 +165,7 @@ p <- ggplot() +
         scale_color_manual(
                 name = "", values = c("#AB82FF", "#4876FF"), 
                 labels = c("Women", "Men"),
-                guide = guide_legend(reverse = TRUE)
+                guide = guide_legend(reverse = TRUE, direction = "horizontal")
                 ) + 
         scale_x_continuous(
                 breaks = seq_len(length(xlbl)),
@@ -111,11 +174,16 @@ p <- ggplot() +
                 ) +
         labs(
                 x = "Age Class", y = "Maximum Weights Lifted", 
-                title = 
+                title = title_beeswarm, 
+                subtitle = sub_beeswarm, 
+                caption = "Data: Open Powerlifting | Graphic: @chucc900"
         ) +
         facet_grid(perform ~ equipment, switch = "y") + 
         theme_minimal(base_size = 16, base_family = "Impact") + 
         theme(
+                plot.margin = margin(20, 20, 20, 20), 
+                plot.title = element_text(size = 28), 
+                plot.subtitle = element_text(size = 24),
                 strip.placement = "outside", 
                 strip.text.y = element_text(size = 12), 
                 legend.position = c(.9, .65), 
@@ -124,9 +192,10 @@ p <- ggplot() +
               )
 
 legend_txt <- "The smooth lines fitted maximum weights \never lifted merely for displaying trends"
-legend_caption <- textGrob(legend_txt, hjust = 0, gp = gpar(fontsize = 7.5, fontfamily = "Impact"))
+legend_caption <- textGrob(legend_txt, hjust = 0, gp = gpar(fontsize = 9, fontfamily = "ImpactaLL"))
 
-ggdraw(p) + 
-        draw_grob(legend_caption, x = .24, y = .08, hjust = -0.1) + 
-        ggsave(here::here("Week 41", "ipf_age_effect.png"), 
-               height = 20, width = 30.9, units = "cm")
+p2 <- ggdraw(p2) + 
+        draw_grob(legend_caption, hjust = -.325, vjust = .03) 
+
+ggsave(here::here("Week 41", "ipf_age_effect.png"), p2,
+               height = 20.9, width = 33.4, units = "cm")
