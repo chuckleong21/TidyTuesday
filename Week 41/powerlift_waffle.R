@@ -20,8 +20,8 @@ title_waffle <- "Women are taking part in powerlifting"
 sub_waffle <- "<span style='color:#AB82FF'>Women</span> first participated powerlifting 
                         competitions in 1980, <br></br>before then it was <span style='color:#4876FF'>men</span> 
                         dominated the scene. More females <br></br>took part in powerlifting events 
-                        ever since. In 2019 42% lifters<br></br>are females, the proportion increases 
-                       more than 10% since 1980."
+                        over the decade in 2010s. <br></br>By 2019 42% lifters are females, the proportion increases 
+                       <br></br>more than 10% since 1980."
 
 # waffle charts
 waffles <- 
