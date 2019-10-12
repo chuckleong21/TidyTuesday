@@ -87,7 +87,7 @@ df_lifts_inc <-
         group_by(sex, age_class) %>% 
         mutate(avgincr = mean(incr))
 
-title_line <- "Less younger competeors over the years?"
+title_line <- "Fewer younger competeors over the years?"
 sub_line <- 
         "Most powerlifters competed their first match around the age between 17 and 22. <br></br>However, 
          over the years, the number of competors in younger age class has <br></br>been decreasing after
