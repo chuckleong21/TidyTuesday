@@ -10,6 +10,11 @@ library(cowplot)
 
 df_lifts_raw <- read_csv(here::here("Week 41", "ipf_lifts.csv"))
 
+# ------
+
+# |============================================|
+# |              Demographics                  |
+# |============================================|
 # waffle -----
 df_lifts_waffle <- 
         df_lifts_raw %>% 
@@ -19,8 +24,9 @@ df_lifts_waffle <-
         gather(sex, n, 2:3) %>% 
         mutate(n = round(n * 100))
 
+t <- unique(df_lifts_waffle$year)
 # sprintf("%03d") pads enough zeros for numbers so they are strings of length 3
-waffle_png <- here::here("Week 41", paste0("waffle_", sprintf("%03d", seq_len(t)), ".png"))
+waffle_png <- here::here("Week 41", paste0("waffle_", sprintf("%03d", seq_along(t)), ".png"))
 
 title_waffle <- "Women are taking part in powerlifting"
 sub_waffle <- "<span style='color:#AB82FF'>Women</span> first participated powerlifting 
@@ -68,6 +74,9 @@ waffles <-
 walk2(waffle_png, waffles, ggsave, width = 25, height = 15, units = "cm")
 
 
+# generate gif via imagemagick@6
+# macOS users do make sure to link it via brew: brew link imagemagick@6 
+# before running the system() call, should you encounter errors
 setwd(here::here("Week 41"))
 system("convert -delay 40 waffle_*.png ipf_waffle.gif")
 invisible(file.remove(list.files()[grepl("waffle_.*\\.png", list.files())]))
@@ -220,3 +229,12 @@ ggsave(here::here("Week 41", "ipf_age_effect.png"), p,
 # the cowplot approach | not as flexible as annotation_custom2()
 # p <- ggdraw(beeswarms) + 
 #         draw_grob(legend_caption, hjust = -.325, vjust = .03) 
+
+# ------
+# |============================================|
+# |             Performance                    |
+# |============================================|
+
+
+# ranking over nth match -----------------------
+# disqulified athletes ------------------------
