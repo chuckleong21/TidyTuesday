@@ -163,6 +163,11 @@ passage3 <- "Another interesting finding here is trucks have a higher CO<sub>2</
 caption <- "data: www.fueleconomy.gov | graphic: @chucc900"
 
 # update plot with text ------ 
+draw_richtext <- function (text, x = 0.5, y = 0.5, size = 14, hjust = 0.5, vjust = 0.5, ...) {
+        ggtext::geom_richtext(data = data.frame(text, x, y), aes(x = x, y = y, label = text), 
+                              size = (size/.pt), inherit.aes = FALSE, hjust = hjust, vjust = vjust, ...)
+}
+
 p <- ggdraw(main, xlim = c(0, 1.9), ylim = c(-0.01, 1.05)) + 
         draw_richtext(title_richtext, x = 1.35, y = .87, label.color = NA, family = "Optima", size = 22) +
         draw_richtext(text = passage1, x = 1.05, y = .73, label.color = NA, family = "Optima", hjust = 0) +
