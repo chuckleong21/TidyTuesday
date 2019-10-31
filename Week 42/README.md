@@ -1,3 +1,1 @@
-That's a <b>lot</b> of data this week! :open_mouth:
-
-![WIP](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/WIP.jpg)
+![cars](https://github.com/chuckleong21/TidyTuesday/blob/master/Week%2042/cars.png)
