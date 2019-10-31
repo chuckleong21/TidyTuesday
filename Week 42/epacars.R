@@ -149,8 +149,8 @@ passage1 <- "A consolidation of plots on the left consists three major parts: <b
 passage2 <- "Through the visualization, we know that the **downword** trend and <br></br>
             **<span style=\"color:#D72F28\">upward**</span> trend in CO<sub>2</sub> contribution 
             by these cars from the mentioned <br></br>manufacturers, are most likely linked to the 
-            notable change in <br></br>model counts of sedan. Even sedan cars are ranked #2 for tailpipe
-            <br></br>CO<sub>2</sub> emission, it surely is the biggest contributor by count."
+            notable change in <br></br>model counts of sedan. Even sedan cars are ranked second last<br></br> 
+            for tailpipe CO<sub>2</sub> emission, it surely is the biggest contributor by count."
 
 passage3 <- "Another interesting finding here is trucks have a higher CO<sub>2</sub> <br></br>emission.
             As we can see from line plots on the right, **<span style=\"color:#EECB3C\">Ford</span>** 
@@ -174,7 +174,6 @@ p <- ggdraw(main, xlim = c(0, 1.9), ylim = c(-0.01, 1.05)) +
         draw_richtext(text = passage2, x = 1.05, y = .53, label.color = NA, family = "Optima", hjust = 0) +
         draw_richtext(text = passage3, x = 1.05, y = .30, label.color = NA, family = "Optima", hjust = 0) +
         draw_text(text = caption, x = .25, y = 0.05, size = 10, family = "Optima")
-p
 
 # the final outcome ------
-ggsave(here::here("Week 42", "cars.png"), p, height = 21.3, width = 31.9, units = "cm")
+ggsave(here::here("Week 42", "cars.png"), p, height = 21.3, width = 33.9, units = "cm")
