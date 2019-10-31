@@ -138,7 +138,7 @@ title_richtext <- paste0(
         " from cars**"
 )
 
-passage1 <- "A consolidation of plots on the left consist three major parts: <br></br>
+passage1 <- "A consolidation of plots on the left consists three major parts: <br></br>
             the overall trend for annual CO<sub>2</sub> proportional contributions,<br></br> 
             above the faceted plots for productions by the following 6 brands,<br></br> 
             from top to bottom, **Dodge**, **Mitsubishi**, **<span style=\"color:#D72F28\">Mercedes-Benz</span>**, 
@@ -164,11 +164,12 @@ caption <- "data: www.fueleconomy.gov | graphic: @chucc900"
 
 # update plot with text ------ 
 p <- ggdraw(main, xlim = c(0, 1.9), ylim = c(-0.01, 1.05)) + 
-        draw_richtext(title_richtext, x = 1.28, y = .99, label.color = NA, family = "Optima", size = 22) +
-        draw_richtext(text = passage1, x = 1, y = .85, label.color = NA, family = "Optima", hjust = 0) +
-        draw_richtext(text = passage2, x = 1, y = .65, label.color = NA, family = "Optima", hjust = 0) +
-        draw_richtext(text = passage3, x = 1, y = .43, label.color = NA, family = "Optima", hjust = 0) +
+        draw_richtext(title_richtext, x = 1.35, y = .87, label.color = NA, family = "Optima", size = 22) +
+        draw_richtext(text = passage1, x = 1.05, y = .73, label.color = NA, family = "Optima", hjust = 0) +
+        draw_richtext(text = passage2, x = 1.05, y = .53, label.color = NA, family = "Optima", hjust = 0) +
+        draw_richtext(text = passage3, x = 1.05, y = .30, label.color = NA, family = "Optima", hjust = 0) +
         draw_text(text = caption, x = .25, y = 0.05, size = 10, family = "Optima")
+p
 
 # the final outcome ------
 ggsave(here::here("Week 42", "cars.png"), p, height = 21.3, width = 31.9, units = "cm")
