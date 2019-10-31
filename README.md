@@ -1,5 +1,15 @@
 # Previous Contributions
 
+## vehicles v.s. carbon-dioxide
+![Week 42](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2042/cars.png)
+
+## powerlifters' demographics
+![Week 41](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2041/ipf_waffle.gif)
+
+![Week 41](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2041/ipf_ageclass.png)
+
+![Week 41](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2041/ipf_age_effect.png)
+
 ## racial diversity in school
 ![Week 39](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2039/diversity.png)
 
