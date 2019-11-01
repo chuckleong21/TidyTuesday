@@ -21,10 +21,7 @@ df_epacars_co2 <-
         df_epacars %>% 
         select(year, make, co2TailpipeGpm, VClass) %>% 
         filter(between(year, 1989, 2019)) %>% 
-        mutate(decade = case_when(between(year, 1990, 1999) ~ "1990s",
-                                  between(year, 2000, 2009) ~ "2000s",
-                                  TRUE ~ "2010s"),
-               VType = case_when(str_detect(VClass, "Cars") ~ "Sedan", 
+        mutate(VType = case_when(str_detect(VClass, "Cars") ~ "Sedan", 
                                  str_detect(VClass, "Wagons") ~ "Wagon", 
                                  str_detect(VClass, "Trucks") ~ "Truck", 
                                  str_detect(VClass, "Vehicle") ~ "SUV", 
