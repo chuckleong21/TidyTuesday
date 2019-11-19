@@ -1,5 +1,11 @@
 # Previous Contributions
 
+## CRAN packages vs codes
+![Week 46](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2046/venn.png)
+
+## travelling to work
+![Week 45](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2045/circular-bar.png)
+
 ## vehicles v.s. carbon-dioxide
 ![Week 42](https://raw.githubusercontent.com/chuckleong21/TidyTuesday/master/Week%2042/cars.png)
 
