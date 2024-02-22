@@ -1,8 +1,7 @@
-
-# library -----------------------------------------------------------------
+# setup -----------------------------------------------------------------
 
 library(tidyverse)
-library(ggtext)
+library(highcharter)
 
 # scale_*_radioactive -----------------------------------------------------
 
@@ -26,12 +25,6 @@ radioactive_cols <- function(...) {
         radioactive_colors[cols]
 }
 
-radioactive_palettes <- list(
-        `main`  = radioactive_cols("gorse", "turqoise", "electric violet"),
-        `mixed` = radioactive_cols("gorse", "charteuse", "turqoise", 
-                                   "caribbean green", "electric violet"),
-        `hot`   = radioactive_cols("red", "orange")
-)
 
 #' Return function to interpolate a radioactive color palette
 #'
@@ -40,6 +33,13 @@ radioactive_palettes <- list(
 #' @param ... Additional arguments to pass to colorRampPalette()
 #'
 radioactive_pal <- function(palette = "main", reverse = FALSE, ...) {
+        
+        radioactive_palettes <- list(
+                `main`  = radioactive_cols("gorse", "turqoise", "electric violet"),
+                `mixed` = radioactive_cols("gorse", "charteuse", "turqoise", 
+                                           "caribbean green", "electric violet"),
+                `hot`   = radioactive_cols("red", "orange")
+        )
         pal <- radioactive_palettes[[palette]]
         
         if(reverse) pal <- rev(pal)
@@ -86,20 +86,104 @@ scale_fill_radioactive <- function(palette = "main", discrete = TRUE, reverse = 
         }
 }
 
-# wrangle -----------------------------------------------------------------
-nuclear_explosions <- tidytuesdayR::tt_load(2019, 34)$nuclear_explosions
+tt <- tidytuesdayR::tt_load(2019, 34)
+
+nuclear_explosions <- tt$nuclear_explosions
+nuclear_explosions <- nuclear_explosions %>% 
+        filter(!is.na(purpose)) %>% 
+        mutate(
+                #! country color are coerced into alphabetical orders 
+                country = case_when(
+                        country == "CHINA"  ~ "China",
+                        country == "FRANCE" ~ "France",
+                        country == "INDIA"  ~ "India",
+                        country == "PAKIST" ~ "Pakistan",
+                        country == "UK"     ~ "United Kingdom",
+                        country == "USA"    ~ "United States of America",
+                        country == "USSR"   ~ "Soviet Union",
+                        
+                )
+        )
+
+packed_bubble_outer_col <- c("#4BE3AC", "#7BF345", "#19C9AA", "#3187C0", "#951DED", "#B5FD29", "#F7FF56")
+
+
+
+# packed bubble -----------------------------------------------------------
+
+hc_theme_radioactive <- hc_theme_merge(
+        hc_theme_null(), 
+        hc_theme(
+                #! this change the colors of the outer bubbles
+                colors = packed_bubble_outer_col, 
+                chart = list(backgroundColor = "#000000"), 
+                title = list(style = list(color = "white")), 
+                subtitle = list(style = list(color = "white")), 
+                legend = list(itemStyle = list(color = "grey"), itemHoverStyle = list(color = "white"))
+        )
+)
+
+hc_packedbubble <- nuclear_explosions %>% 
+        mutate(purpose = ifelse(str_detect(purpose, "WR"), "WR", purpose)) %>%  
+        count(country, purpose) %>% 
+        mutate(
+                #! this only changes the colors of the inner bubbles
+                color = case_when(
+                        country == "China"  ~ "#3cb589",
+                        country == "France" ~ "#62c237",
+                        country == "India"  ~ "#19C9AA",
+                        country == "Pakistan" ~ "#276c99",
+                        country == "Soviet Union"   ~ "#7717bd",
+                        country == "United Kingdom"     ~ "#90ca20",
+                        country == "United States of America"    ~ "#c5cc44"
+                )
+        ) %>%
+        arrange(desc(purpose)) %>% 
+        hchart(
+                # declare chart type
+                type = "packedbubble", 
+                # aesthestic arguments take directly from that in highcharterJS
+                hcaes(name = purpose, value = n, group = country, color = color)
+        ) %>% 
+        hc_plotOptions(
+                packedbubble = list(
+                        minSize = "20%",
+                        maxsize = "100%",
+                        zMin = 0, 
+                        layoutAlgorithm = list(
+                                gravitationalConstant = 0.05,
+                                splitSeries =  TRUE, # split bubbles into groups
+                                seriesInteraction = FALSE, # subItems cannot be dragged into other groups
+                                dragBetweenSeries = FALSE, # SubItems are always back to its parent
+                                parentNodeLimit = FALSE
+                        ), 
+                        dataLabels = list(
+                                enabled = TRUE,
+                                format = '{point.name}', 
+                                # filter `purpose == 'WR'`
+                                filter = list(property ='x', operator =  '===', value = 0),
+                                style = list(color = 'black', textOutline = 'none', fontWeight = 'normal')
+                        )
+                        
+                )
+        ) %>% 
+        hc_title(text = 'Distributions in Nuclear Explosions Across the Globe') %>% 
+        hc_subtitle(text = 'Between 1945 and 1998, most of the nuclear explosions were for weapon development programmes') %>% 
+        hc_tooltip(useHTML = TRUE, pointFormat = '{point.value} {point.name}') %>% 
+        hc_add_theme(hc_theme_radioactive)
+
+# htmlwidgets::saveWidget(hc_packedbubble, "plot/2019034.html")
+
+# barplot -----------------------------------------------------------------
+
 
 explosions_depth <- nuclear_explosions %>% 
-        select(year, country, type) %>% 
-        mutate(country = case_when(country == "PAKIST" ~ "Pakistan",
-                                   country == "USA" ~ "USA",
-                                   country == "UK" ~ "United Kingdom",
-                                   country == "USSR" ~ "Soviet Union",
-                                   T ~ str_to_title(country)),
-               type = ifelse(grepl("SHAFT|MINE|U[G|W]|TUNNEL|GALLERY", type), "U", "A")
+        mutate(
+                type = ifelse(grepl("SHAFT|MINE|U[G|W]|TUNNEL|GALLERY", type), "U", "A"), 
+                purpose = fct_lump_min(purpose, min = 100)
         ) %>% 
-        group_by(year, country, type) %>% 
-        count() %>% 
+        select(year, country, type) %>% 
+        count(year, country, type) %>% 
         mutate(n = ifelse(type == "U", -n, n))
 
 annotations <- tibble(x1 = c(1963, 1996, NA, NA), y1 = c(5, 0, NA, NA),
@@ -112,30 +196,31 @@ annotations <- tibble(x1 = c(1963, 1996, NA, NA), y1 = c(5, 0, NA, NA),
                                "**Atmopsheric**", "**Underground**")
 )
 
-manual_pal <- set_names(radioactive_pal("mixed")(7), c("USA", "United Kingdom", "France", "China", 
-                                                       "India", "Pakistan", "Soviet Union"))
-
-# barplot --------------------------------------------------------------------
-p <- ggplot() + 
+manual_pal <- set_names(
+        packed_bubble_outer_col, 
+        c("China", "France", "India", "Pakistan", "Soviet Union", "United Kingdom", "United States of America")
+)
+ggplot() + 
         geom_segment(data = annotations, aes(x = x1, y = y1, xend = x2, yend = y2), 
                      col = "white") +
         geom_segment(data = annotations, aes(x = x1, xend = x3, y = y3, yend = y3), 
                      col = "white") +
-        geom_richtext(data = annotations, aes(x = xtext, y = ytext, label = text), 
+        ggtext::geom_richtext(data = annotations, aes(x = xtext, y = ytext, label = text), 
                       size = 5.5, fill = NA, color = "white", label.color = NA,
                       family = "Baskerville") +
         geom_bar(data = explosions_depth, aes(x = year, y = n, col = country), 
                  stat = "identity", fill = NA) +
         scale_color_manual(values = manual_pal) +
         scale_x_continuous("", breaks = seq(1945, 2000, 1), expand = c(0.03, 0)) +
+        scale_y_continuous(labels = \(x) abs(x)) +
         guides(color = guide_legend(ncol = 2)) +
-        theme_minimal(base_size = 16, base_family = "Baskerville") +
         labs(x = "", y = "", 
              title = str_to_title("the number of nuclear explosions"),
              subtitle = str_wrap("A re-design for statistical chart in SIPRI report (2000) tallying 
                                  the number of nuclear explosions conducted by countries 
                                  in the air and under ground.", 85), 
              caption = "data: Stockholm International Peace Research Institute|graph: @chucc900") +
+        theme_minimal(base_size = 16, base_family = "Baskerville") +
         theme(panel.background = element_rect("#000000"), 
               plot.background = element_rect("#000000"),
               panel.grid.minor = element_blank(),
@@ -156,24 +241,15 @@ p <- ggplot() +
         )
 
 
+# TODO: nuclear explosions at geographical coordinates and magnitude
 # nuclear calendar --------------------------------------------------------
 
 calendar <- tibble(year = rep(1945:1998, each = 84), 
                    month = rep(1:12, 7*54),
-                   country = rep(rep(unique(nuclear_explosions$country), each = 12), 54)) %>% 
-        mutate(country = case_when(country == "PAKIST" ~ "Pakistan",
-                                   country == "USA" ~ "USA",
-                                   country == "UK" ~ "United Kingdom",
-                                   country == "USSR" ~ "Soviet Union",
-                                   T ~ str_to_title(country)))
+                   country = rep(rep(unique(nuclear_explosions$country), each = 12), 54))
 nuc_timeline <- nuclear_explosions %>% 
         select(date_long, country) %>% 
         mutate(date_long = lubridate::ymd(date_long), 
-               country = case_when(country == "PAKIST" ~ "Pakistan",
-                                   country == "USA" ~ "USA",
-                                   country == "UK" ~ "United Kingdom",
-                                   country == "USSR" ~ "Soviet Union",
-                                   T ~ str_to_title(country)),
                year = lubridate::year(date_long),
                month = lubridate::month(date_long)
         ) 
@@ -187,7 +263,10 @@ calendars <- calendar %>%
         filter(!country %in% c("Pakistan", "India"), !(year == 1945 & month < 7)) %>% 
         group_by(country) %>% 
         group_split()
-calendars <- set_names(calendars, c("China", "France", "Soviet Union", "United Kingdom", "USA"))
+calendars <- set_names(
+        calendars, 
+        c("China", "France", "Soviet Union", "United Kingdom", "United States of America")
+)
 
 # filter observations before the first nuclear explosion took place in each country except US
 calendars$China <- calendars$China %>% 
@@ -202,7 +281,8 @@ calendars$`Soviet Union` <- calendars$`Soviet Union` %>%
 calendars$`United Kingdom` <- calendars$`United Kingdom` %>% 
         filter(year >= 1952) %>% 
         filter(!(year == 1952 & month < 10))
-calendars$USA <- calendars$USA %>% filter(!(year == 1945 & month < 7))
+calendars$`United States of America` <- calendars$`United States of America` %>% 
+        filter(!(year == 1945 & month < 7))
 calendar <- map_df(calendars, rbind) %>% arrange(year) %>% filter(!year > 1996)
 
 annodat <- function(direction = "right", year, month, stretch, 
@@ -254,7 +334,7 @@ usa_tests <- list(direction = c("right", "right", "left", "right",
                   month = c(7, 7, 5, 11, 3, NA, 5, 9),
                   stretch = c(5, 13, -1, 13, -2, -2, -1, 13),
                   group = 8:1, 
-                  country = "USA"
+                  country = "United States of America"
 )
 
 annodata <- list(china_tests, france_tests, ussr_tests, uk_tests, usa_tests) %>% 
@@ -298,7 +378,7 @@ annotext <- annodata %>%
                        fill = guide_legend(title = "Tests/Explosions", reverse = TRUE, 
                                            direction = "horizontal", title.position = "top",
                                            keyheight = 1)) +
-                scale_color_radioactive(palette = "mixed") +        
+                scale_color_manual(values = manual_pal) +
                 scale_x_reverse(breaks = c(1996:1945)) +
                 scale_y_continuous(breaks = 1:12, labels = month.abb,
                                    limits = c(-4, 15), expand = c(-0.05, -.2)) + 
@@ -330,49 +410,51 @@ annotext <- annodata %>%
 
 
 
-# ggsave(here("Week 34", "nuclear_calendar.png"), p, width = 20, height = 20)
+# ggsave(here::here("plot", "2019034-002.png"), p, width = 20, height = 20)
 
-# draw calendar
-briefs <- read_csv(here::here("static", "data", "2019034-nuclear_test_brief.csv"))
-briefs <- briefs %>% 
-        slice(-22) %>% 
-        mutate(
-                date = map(list(ymd, my), \(f) map(briefs$date, \(date) f(date))) %>% 
-                        flatten() %>% keep(\(x) !is.na(x)) %>% reduce(c),
-                day = as.numeric(substring(date, nchar(date) - 1, nchar(date))),
-                date = format(lubridate::ymd(date), "%b %Y")
-        ) %>% 
-        mutate(content = gsub(";", ",", content), 
-               project = paste(id, project))
-
-cal <- tibble(
-        x0 = c(0, 0), y0 = c(.7, 0), x1 = c(1, 1), y1 = c(1, .7),
-        part = c("h", "b")
-)
-
-ani <- map(seq_len(nrow(briefs)), \(i) {
-        ggplot(cal) +
-                geom_rect(aes(xmin = x0, ymin = y0, xmax = x1, ymax = y1, fill = part), show.legend = F) + 
-                # yearmon
-                geom_text(data = briefs[i, ], aes(x = .5, y = .85, label = date), size = 20, color = "#FFFFFF") + 
-                # day
-                geom_text(data = briefs[i, ], aes(x = .5, y = .6, label = day), size = 35, na.rm = TRUE, color = "#FFFFFF") +
-                # project name
-                geom_text(data = briefs[i, ], aes(x = .05, y = .4, label = project, color = country), 
-                          size = 8, hjust = 0, vjust = .5, show.legend = F, family = "Baskerville", fontface = "bold") + 
-                # project brief
-                geom_text(data = briefs[i, ], aes(x = .05, y = .2, label = str_wrap(content, 40)), 
-                          size = 6, color = "#FFFFFF", hjust = 0, vjust = 0.2, family = "Baskerville", fontface = "bold") +
-                scale_fill_manual(values = c("#000000", "#FF0000")) +
-                scale_color_manual(values = radioactive_pal("mixed")(5)) +
-                coord_fixed(xlim = c(0, 1), ylim = c(0, 1)) +
-                labs(x = "", y = "") +
-                theme(plot.background = element_rect(fill = "#000000"), 
-                      panel.background = element_rect(fill = "#000000", color = "#FFFFFF", size = 2), 
-                      plot.margin = margin(8, 15, 0, 0), 
-                      panel.grid = element_blank(), 
-                      axis.ticks = element_blank(), 
-                      axis.text = element_blank())
-})
-
-nuclear_png <- here::here("plot", paste0("2019034-cal_", sprintf("%03d.png", seq_along(ani))))
+# draw calendar -------------
+# 
+# 
+# briefs <- read_csv(here::here("static", "data", "2019034-nuclear_test_brief.csv"))
+# briefs <- briefs %>% 
+#         slice(-22) %>% 
+#         mutate(
+#                 date = map(list(ymd, my), \(f) map(briefs$date, \(date) f(date))) %>% 
+#                         flatten() %>% keep(\(x) !is.na(x)) %>% reduce(c),
+#                 day = as.numeric(substring(date, nchar(date) - 1, nchar(date))),
+#                 date = format(lubridate::ymd(date), "%b %Y")
+#         ) %>% 
+#         mutate(content = gsub(";", ",", content), 
+#                project = paste(id, project))
+# 
+# cal <- tibble(
+#         x0 = c(0, 0), y0 = c(.7, 0), x1 = c(1, 1), y1 = c(1, .7),
+#         part = c("h", "b")
+# )
+# 
+# ani <- map(seq_len(nrow(briefs)), \(i) {
+#         ggplot(cal) +
+#                 geom_rect(aes(xmin = x0, ymin = y0, xmax = x1, ymax = y1, fill = part), show.legend = F) + 
+#                 # yearmon
+#                 geom_text(data = briefs[i, ], aes(x = .5, y = .85, label = date), size = 20, color = "#FFFFFF") + 
+#                 # day
+#                 geom_text(data = briefs[i, ], aes(x = .5, y = .6, label = day), size = 35, na.rm = TRUE, color = "#FFFFFF") +
+#                 # project name
+#                 geom_text(data = briefs[i, ], aes(x = .05, y = .4, label = project, color = country), 
+#                           size = 8, hjust = 0, vjust = .5, show.legend = F, family = "Baskerville", fontface = "bold") + 
+#                 # project brief
+#                 geom_text(data = briefs[i, ], aes(x = .05, y = .2, label = str_wrap(content, 40)), 
+#                           size = 6, color = "#FFFFFF", hjust = 0, vjust = 0.2, family = "Baskerville", fontface = "bold") +
+#                 scale_fill_manual(values = c("#000000", "#FF0000")) +
+#                 scale_color_manual(values = radioactive_pal("mixed")(5)) +
+#                 coord_fixed(xlim = c(0, 1), ylim = c(0, 1)) +
+#                 labs(x = "", y = "") +
+#                 theme(plot.background = element_rect(fill = "#000000"), 
+#                       panel.background = element_rect(fill = "#000000", color = "#FFFFFF", size = 2), 
+#                       plot.margin = margin(8, 15, 0, 0), 
+#                       panel.grid = element_blank(), 
+#                       axis.ticks = element_blank(), 
+#                       axis.text = element_blank())
+# })
+# 
+# nuclear_png <- here::here("plot", paste0("2019034-cal_", sprintf("%03d.png", seq_along(ani))))
