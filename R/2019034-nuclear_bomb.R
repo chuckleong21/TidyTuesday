@@ -86,6 +86,9 @@ scale_fill_radioactive <- function(palette = "main", discrete = TRUE, reverse = 
         }
 }
 
+# data --------------------------------------------------------------------
+
+
 tt <- tidytuesdayR::tt_load(2019, 34)
 
 nuclear_explosions <- tt$nuclear_explosions
@@ -105,12 +108,10 @@ nuclear_explosions <- nuclear_explosions %>%
                 )
         )
 
-packed_bubble_outer_col <- c("#4BE3AC", "#7BF345", "#19C9AA", "#3187C0", "#951DED", "#B5FD29", "#F7FF56")
-
-
 
 # packed bubble -----------------------------------------------------------
 
+packed_bubble_outer_col <- c("#4BE3AC", "#7BF345", "#19C9AA", "#3187C0", "#951DED", "#B5FD29", "#F7FF56")
 hc_theme_radioactive <- hc_theme_merge(
         hc_theme_null(), 
         hc_theme(
@@ -129,13 +130,13 @@ hc_packedbubble <- nuclear_explosions %>%
         mutate(
                 #! this only changes the colors of the inner bubbles
                 color = case_when(
-                        country == "China"  ~ "#3cb589",
-                        country == "France" ~ "#62c237",
-                        country == "India"  ~ "#19C9AA",
-                        country == "Pakistan" ~ "#276c99",
-                        country == "Soviet Union"   ~ "#7717bd",
-                        country == "United Kingdom"     ~ "#90ca20",
-                        country == "United States of America"    ~ "#c5cc44"
+                        country == "China"                   ~ "#3cb589",
+                        country == "France"                  ~ "#62c237",
+                        country == "India"                   ~ "#19C9AA",
+                        country == "Pakistan"                ~ "#276c99",
+                        country == "Soviet Union"            ~ "#7717bd",
+                        country == "United Kingdom"          ~ "#90ca20",
+                        country == "United States of America"~ "#c5cc44"
                 )
         ) %>%
         arrange(desc(purpose)) %>% 
@@ -411,50 +412,3 @@ annotext <- annodata %>%
 
 
 # ggsave(here::here("plot", "2019034-002.png"), p, width = 20, height = 20)
-
-# draw calendar -------------
-# 
-# 
-# briefs <- read_csv(here::here("static", "data", "2019034-nuclear_test_brief.csv"))
-# briefs <- briefs %>% 
-#         slice(-22) %>% 
-#         mutate(
-#                 date = map(list(ymd, my), \(f) map(briefs$date, \(date) f(date))) %>% 
-#                         flatten() %>% keep(\(x) !is.na(x)) %>% reduce(c),
-#                 day = as.numeric(substring(date, nchar(date) - 1, nchar(date))),
-#                 date = format(lubridate::ymd(date), "%b %Y")
-#         ) %>% 
-#         mutate(content = gsub(";", ",", content), 
-#                project = paste(id, project))
-# 
-# cal <- tibble(
-#         x0 = c(0, 0), y0 = c(.7, 0), x1 = c(1, 1), y1 = c(1, .7),
-#         part = c("h", "b")
-# )
-# 
-# ani <- map(seq_len(nrow(briefs)), \(i) {
-#         ggplot(cal) +
-#                 geom_rect(aes(xmin = x0, ymin = y0, xmax = x1, ymax = y1, fill = part), show.legend = F) + 
-#                 # yearmon
-#                 geom_text(data = briefs[i, ], aes(x = .5, y = .85, label = date), size = 20, color = "#FFFFFF") + 
-#                 # day
-#                 geom_text(data = briefs[i, ], aes(x = .5, y = .6, label = day), size = 35, na.rm = TRUE, color = "#FFFFFF") +
-#                 # project name
-#                 geom_text(data = briefs[i, ], aes(x = .05, y = .4, label = project, color = country), 
-#                           size = 8, hjust = 0, vjust = .5, show.legend = F, family = "Baskerville", fontface = "bold") + 
-#                 # project brief
-#                 geom_text(data = briefs[i, ], aes(x = .05, y = .2, label = str_wrap(content, 40)), 
-#                           size = 6, color = "#FFFFFF", hjust = 0, vjust = 0.2, family = "Baskerville", fontface = "bold") +
-#                 scale_fill_manual(values = c("#000000", "#FF0000")) +
-#                 scale_color_manual(values = radioactive_pal("mixed")(5)) +
-#                 coord_fixed(xlim = c(0, 1), ylim = c(0, 1)) +
-#                 labs(x = "", y = "") +
-#                 theme(plot.background = element_rect(fill = "#000000"), 
-#                       panel.background = element_rect(fill = "#000000", color = "#FFFFFF", size = 2), 
-#                       plot.margin = margin(8, 15, 0, 0), 
-#                       panel.grid = element_blank(), 
-#                       axis.ticks = element_blank(), 
-#                       axis.text = element_blank())
-# })
-# 
-# nuclear_png <- here::here("plot", paste0("2019034-cal_", sprintf("%03d.png", seq_along(ani))))
