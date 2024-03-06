@@ -2,9 +2,11 @@ library(tidyverse)
 library(here)
 library(ggtext)
 
-df_cpu <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-09-03/cpu.csv")
-df_gpu <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-09-03/gpu.csv")
-df_ram <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-09-03/ram.csv")
+tt <- tidytuesdayR::tt_load(2019, 36)
+
+df_cpu <- tt$cpu
+df_gpu <- tt$gpu
+df_ram <- tt$ram
 
 df_all <- df_ram %>% 
         rename(name = chip_name, designer = manufacturer_s) %>% 
@@ -62,7 +64,7 @@ df_ratio %>%
                     se = F,  linetype = 2, method = "loess", span = .8) +
         geom_richtext(data = df_lbls, aes(x, y, label = lbl, color = lbl), 
                       fill = NA, label.color = NA) + 
-        geom_hline(yintercept = 2, linetype = 2, size = 0.5, color = "#FFFFFF") + 
+        geom_hline(yintercept = 2, linetype = 2, linewidth = 0.5, color = "#FFFFFF") + 
         annotate("text", x = 1965, y = 21, 
                  label = "R==frac(italic(max)*(N)[t+1], italic(max)*(N)[t])", parse = TRUE, 
                  size = 6, color = "#f7efd3", family = "Futura Condensed Medium") + 
@@ -98,5 +100,6 @@ df_ratio %>%
         labs(x = "", y = "", 
              title = "The **substainability** of Moore's Law",
              subtitle = subtitle_lab, 
-             caption = "**Data: Wikipedia | Graphic: @chucc900**") + 
-        ggsave(here("Week 36", "moore's_law.png"), width = 33.9, height = 19.9, units = "cm")
+             caption = "**Data: Wikipedia | Graphic: @chucc900**")
+
+ggsave(here::here("plot", "2019036001.png"), width = 33.9, height = 19.9, units = "cm")

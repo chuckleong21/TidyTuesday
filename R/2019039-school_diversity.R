@@ -1,14 +1,10 @@
 library(tidyverse)
 library(ggalluvial)
 
-# df_school_diversity <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-09-24/school_diversity.csv")
-# This plot requires Nimrod.ttf provided in the git
-
-# speed up data loading through local file
-df_raw <- read_csv(here::here("Week 39", "school_diversity.csv"))
+tt <- tidytuesdayR::tt_load(2019, 39)
 
 df_school_diversity <- 
-        df_raw %>% 
+        tt$school_diversity %>% 
         janitor::clean_names() %>% 
         select(leaid, st, school_year, diverse) %>% 
         filter(st != "DC") %>% 
@@ -51,10 +47,4 @@ df_school_diversity %>%
               axis.text.y = element_blank(),
               strip.text = element_text(size = 14))
 
-if(file.exists(here::here("Week 39", "diversity.png"))) {
-        ask <- askYesNo("'diversity.png' already exists, do you want to replace it? \n")
-        if(ask) ggsave(here::here("Week 39", "diversity.png"), 
-                       height = 29.9, width = 42.9, units = "cm")      
-} else {
-        ggsave(here::here("Week 39", "diversity.png"), height = 29.9, width = 42.9, units = "cm")
-}
+ggsave(here::here("plot", "2019039001.png"), height = 29.9, width = 42.9, units = "cm")
