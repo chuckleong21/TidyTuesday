@@ -59,10 +59,10 @@ library(gganimate)
 
 anim <- 
   p + transition_time(year) + 
-  shadow_mark(future = TRUE, exclude_layer = 2:3) + 
+  shadow_mark(past = TRUE, exclude_layer = 2:3) + 
   ease_aes('bounce-in-out')
 
 
 anim_save(here::here("plot", "2019038001.gif"), 
-          animate(anim2, fps = 8, end_pause = 10))
+          animate(anim, fps = 8, end_pause = 10))
 
