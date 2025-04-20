@@ -35,13 +35,8 @@ vignettes/*.pdf
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
 
-# output plot
-plot/
-others/
-
 # Cache files
 *.DS_Store
 .Rproj.user
 .Rdata
-.DS_Store
 .quarto
