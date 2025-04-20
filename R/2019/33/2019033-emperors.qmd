@@ -1,8 +1,15 @@
+---
+title: "2019033-emperors"
+format: html
+editor: visual
+---
 
-# library --------------------------------------------------------------------
+```{r, setup}
+#| echo: false
+#| message: false
+#| warning: false
 
 library(tidyverse)
-library(lubridate)
 library(tidytuesdayR)
 library(ggalluvial)
 library(ggrepel)
@@ -37,15 +44,11 @@ theme_plex <- function(base_size = 11,
 
 theme_set(theme_plex())
 
-
-# load --------------------------------------------------------------------
-
 tt <- tt_load(2019, 33)
 emperors <- tt$emperors
+```
 
-
-# wrangle -----------------------------------------------------------------
-
+```{r, wrangle}
 before_bc <- c("Augustus", "Tiberius", "Claudius", "Galba")
 
 emperors_years <- emperors %>% 
@@ -72,9 +75,14 @@ curve_data <- tibble(curve_x = c(-40, 430),
                      curve_xend = c(-26, 418), 
                      curve_y = c(3, 64), 
                      curve_yend = c(1, 67))
+```
 
+```{r, plot}
+#| warning: false
+#| fig-width: 11.2
+#| fig-height: 8
+#| lightbox: true
 
-# plot --------------------------------------------------------------------
 
 my_palette <- colorRampPalette(c("#F5F646", "#F95E7F"))(8) %>% 
         set_names(unique(plot_data$dynasty))
@@ -87,7 +95,9 @@ timeline <- ggplot(plot_data, aes(y = 0)) +
         geom_segment(aes(x = reign_start_year, 
                          xend = reign_end_year, 
                          yend = 0, color = dynasty), 
-                     size = 4) +
+                     # size = 4 # deprecated
+                     linewidth = 4
+                     ) +
         scale_x_continuous(breaks = c(-62, 0, 100, 200, 300, 400), 
                            labels = c("62BC", "AD", "100AD", "200AD", "300AD", "400AD")) +
         expand_limits(x = c(-62, 450)) +
@@ -105,9 +115,14 @@ timeline <- ggplot(plot_data, aes(y = 0)) +
 # segment bars
 main <- ggplot(plot_data, aes(y = reorder(name, reign_start_year))) +
         geom_segment(aes(x = birth_year, xend = death_year, yend = name), 
-                     size = 2, color = "grey90") +
+                     # size = 2, # deprecated
+                     linewidth = 2, 
+                     color = "grey90") +
         geom_segment(aes(x = reign_start_year, xend = reign_end_year, y = name, 
-                         yend = name, color = dynasty), size = 2) +
+                         yend = name, color = dynasty), 
+                     # size = 2
+                     linewidth = 2
+                     ) +
         geom_text(aes(x = death_year, label = name), 
                   hjust = 0, size = 2, nudge_x = 2.5) +
         geom_curve(data = curve_data, 
@@ -127,11 +142,17 @@ main <- ggplot(plot_data, aes(y = reorder(name, reign_start_year))) +
         theme(axis.text = element_blank(),
               axis.ticks = element_blank(),
               panel.grid.major = element_blank(),
-              legend.position = c(.8, 0.5),
+              # legend.position = c(.8, 0.5), # deprecated
+              legend.position.inside = c(0.8, 0.5),
               legend.background = element_rect(fill = "white", colour = "white")
         )
 
+patchwork::wrap_plots(main, timeline, ncol = 1, heights = c(0.9, 0.1))
+```
+
+```{r, save}
+#| eval: false
+#| echo: false
 patchwork::wrap_plots(main, timeline, ncol = 1, heights = c(0.9, 0.1)) %>% 
         ggsave(filename = "2019033-001.png", plot = ., device = "png", path = "plot")
-
-
+```
