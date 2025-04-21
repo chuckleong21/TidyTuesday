@@ -488,3 +488,9 @@ p +
 6.  `ggtext::geom_richtext()` accepts markdown text format.
 7.  `panel.*` arguments control the elements inside the axis area.
 8.  `legend.*` arguments control the legend elements.
+
+# Conclusion
+
+There were negotiations between these nuclear-armed countries over the years. We can see the nuclear explosions moved to underground since the ratification of the Partial Test Ban Treaty. The Comprehensive Test Ban Treaty was introduced as the world saw how nuclear tests had negatively impacted those involved.[^1]
+
+[^1]: Read more about the history timeline of these two treaties [here](https://www.nti.org/education-center/treaties-and-regimes/treaty-banning-nuclear-test-atmosphere-outer-space-and-under-water-partial-test-ban-treaty-ptbt/).
