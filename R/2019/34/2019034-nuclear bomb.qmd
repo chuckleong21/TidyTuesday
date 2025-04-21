@@ -1,0 +1,490 @@
+---
+title: "2019033-emperors"
+format: html
+editor: visual
+code-annotations: hover
+toc: true
+---
+
+```{r, setup}
+#| echo: false 
+#| messsage: false
+#| warning: false
+
+
+library(tidyverse)
+library(highcharter)
+
+tt <- tidytuesdayR::tt_load(2019, 34)
+
+nuclear_explosions <- tt$nuclear_explosions
+```
+
+::: callout-note
+## Story
+
+The 7 countries started a nuclear development race since the world had witnessed the power of nuclear bombs used in the World War Ⅱ. There were 2050 detonations before the last one on record in 1998. It is no surprise that most of these detonations applied or tested for weaponry. Below we will find out the exact number of detonations for this particular purpose, as well as the changes in the number of detonations over the years and the power of these detonations in numbers.
+:::
+
+# Nuclear bomb detonations for weapon development
+
+We will start our analysis with a packed bubble chart to see the number of detonations for weapon development in each countries.
+
+\`highcharter\` is a R library that uses the [highcharstJS API](https://api.highcharts.com/highcharts/). It may seem complex at first glance as Javascript heavily uses nested lists like JSON, but it offers interactivity. Here is a simple comparison between JS and R:
+
+:::::: columns
+::: {.column width="45%"}
+### Javascript
+
+```{js}
+Highchart.chart('container', {
+        chart: {
+                type: 'packedbubble'
+        }
+})
+
+```
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column width="45%"}
+### R
+
+```{r}
+#| eval: false
+
+hchart(type = "packedbubble")
+
+```
+:::
+::::::
+
+```{r, wrangle}
+nuclear_explosions <- nuclear_explosions %>% 
+        filter(!is.na(purpose)) %>% 
+        mutate(
+                #! country color are coerced into alphabetical orders 
+                country = case_when( # <1>
+                        country == "CHINA"  ~ "China", # <2>
+                        country == "FRANCE" ~ "France", # <2>
+                        country == "INDIA"  ~ "India", # <2>
+                        country == "PAKIST" ~ "Pakistan", # <2>
+                        country == "UK"     ~ "United Kingdom", # <2>
+                        country == "USA"    ~ "United States of America", # <2>
+                        country == "USSR"   ~ "Soviet Union", # <2>
+                ) # <1>
+        )
+
+```
+
+1.  Recode the country names as they affect how they will be displayed on our chart.
+2.  The display order is in alphabetical for the legend by default. I have not yet figured out how to customize it in `highcharter`.
+
+```{r, packed bubble inner colors}
+nuclear_explosions_pb <- nuclear_explosions %>% 
+        mutate(purpose = ifelse(str_detect(purpose, "WR"), "WR", purpose)) %>%  
+        count(country, purpose) %>% 
+        mutate(
+                #! this only changes the colors of the inner bubbles
+                color = case_when( # <3>
+                        country == "China"                   ~ "#3cb589", # <3>
+                        country == "France"                  ~ "#62c237", # <3>
+                        country == "India"                   ~ "#19C9AA", # <3>
+                        country == "Pakistan"                ~ "#276c99", # <3>
+                        country == "Soviet Union"            ~ "#7717bd", # <3>
+                        country == "United Kingdom"          ~ "#90ca20", # <3>
+                        country == "United States of America"~ "#c5cc44" # <3>
+                ) # <3>
+        ) %>%
+        arrange(desc(purpose))
+```
+
+3.  Assign colors to inner bubbles, they will also be applied in the legend.
+
+::: callout-caution
+## Bubble colors
+
+There are two types color sequence: colors of **inner bubbles** and colors of **outer bubbles**. The outer bubble is a larger bubble that encapsulates all the other smaller bubbles, thus the inner bubbles.
+
+By default, **darker colors** of the same hue are applied to **inner bubbles** as well as in the **legend**, while lighter colors are applied to outer bubbles.
+:::
+
+```{r, custom theme}
+packed_bubble_outer_col <- c("#4BE3AC", "#7BF345", "#19C9AA", "#3187C0", "#951DED", "#B5FD29", "#F7FF56")
+
+hc_theme_radioactive <- hc_theme_merge(
+        hc_theme_null(), # <5>
+        hc_theme(
+                #! this change the colors of the outer bubbles
+                colors = packed_bubble_outer_col, # <4>
+                chart = list(backgroundColor = "#000000"), 
+                title = list(style = list(color = "white")), 
+                subtitle = list(style = list(color = "white")), 
+                legend = list(itemStyle = list(color = "grey"), itemHoverStyle = list(color = "white"))
+        )
+)
+```
+
+4.  The outer bubble colors are set in the \`hc_theme()\` and doesn't impact the inner bubble colors.
+5.  It is best to initiate a null theme \`hc_theme_null()\` (the equivalent \`theme_grey()\` in ggplot2 syntax) before customizing your theme.
+
+::: callout-important
+## Plot Options
+
+Remember that you can always refer to the [documentation](https://api.highcharts.com/highcharts/plotOptions.packedbubble) to explore what Hightcharts has to offer. Things to note when you convert JS code to R code:
+
+-   Every object is converted to a list in R. Consider the following example:
+
+    :::::: columns
+    ::: {.column width="45%"}
+    ### JS
+
+    ```{js}
+    plotOptions: {
+            packedbubble: {
+                    minSize: "20%", 
+                    maxSize: "100%", 
+                    zMin: 0, 
+                    zMax: 1000,
+                    layoutAlgorithm: {
+                            gravitationalConstant: 0.05, 
+                            splitSeries: true, 
+                            seriesInteraction: false, 
+                            dragBetweenSeries: true, 
+                            parentNodeLimit: true
+                    },
+                    dataLabels: {
+                            enabled: true, 
+                            format: '{pont.name}', 
+                            filter: {
+                                    property: 'y', 
+                                    operator: '>', 
+                                    value: 250
+                            }
+                    }
+            }
+    }
+    ```
+    :::
+
+    ::: {.column width="5%"}
+    :::
+
+    ::: {.column width="45%"}
+    ### R
+
+    ```{r}
+    #| eval: false
+
+    hc_plotOptions(
+            packedbubble = list(
+                    minSize = "20%", 
+                    maxSize = "100%", 
+                    zMin = 0, 
+                    zMax = 1000, 
+                    layoutAlgorithm = list(
+                            gravitationalConstant = 0.05, 
+                            splitSeries = TRUE, 
+                            seriesInteraction = FALSE, 
+                            dragBetweenSeries = TRUE, 
+                            parentNodeLimit = TRUE
+                    ), 
+                    dataLabels = list(
+                            enabled = TRUE, 
+                            format = "{point.name}", 
+                            filter = list(
+                                    property = "y", 
+                                    operator = ">", 
+                                    value = 250
+                            )
+                    )
+            )
+    )
+
+    ```
+    :::
+    ::::::
+:::
+
+```{r, packed bubble}
+hc_packedbubble <- nuclear_explosions_pb %>% 
+        hchart(
+                # declare chart type
+                type = "packedbubble", 
+                # aesthestic arguments take directly from that in highcharterJS
+                hcaes( # <7>
+                        name = purpose, # <7>
+                        value = n, # <7>
+                        group = country, # <7>
+                        color = color # <7>
+                ) # <7>
+        ) %>% 
+        hc_plotOptions(
+                packedbubble = list(
+                        minSize = "20%",
+                        maxsize = "100%",
+                        zMin = 0, # <8>
+                        layoutAlgorithm = list(
+                                gravitationalConstant = 0.05, # <9>
+                                splitSeries =  TRUE, # <10>
+                                seriesInteraction = FALSE, # <11>
+                                dragBetweenSeries = FALSE, # <12>
+                                parentNodeLimit = FALSE
+                        ), 
+                        dataLabels = list(
+                                enabled = TRUE,
+                                format = '{point.name}', 
+                                # filter `purpose == 'WR'`
+                                filter = list(
+                                        property = 'x', # <13> 
+                                        operator =  '===', # <14>
+                                        value = 0 # <15>
+                                        ),
+                                style = list(
+                                        color = 'black', 
+                                        textOutline = 'none', 
+                                        fontWeight = 'normal'
+                                        )
+                        )
+                        
+                )
+        ) %>% 
+        hc_title(text = 'Distributions in Nuclear Explosions Across the Globe') %>% 
+        hc_subtitle(text = 'Between 1945 and 1998, most of the nuclear explosions were for weapon development programmes') %>% 
+        hc_tooltip(useHTML = TRUE, pointFormat = '{point.value} {point.name}') %>% 
+        hc_add_theme(hc_theme_radioactive) # <6>
+
+hc_packedbubble
+```
+
+6.  Apply custom theme.
+7.  The common aesthetic parameters `hc_aes()` accept: `x,y`, `name`, `value`, `group`, `color`.
+8.  `zMin/zMax` values defines the expansion behaviour during the initiated animation frames. They work with `bubble` series internally to control bubble "sizes". It would be best to leave it as 0.
+9.  The larger this parameter is, the more wobbly the bubbles are.
+10. Split bubbles into groups.
+11. SubItems cannot be dragged into other groups,
+12. SubItems are always back to its parent.
+13. Correspond to `name` argument in chart definition.
+14. The `==` operator in R is expressed as `===` in JS.
+15. Represents the indices of data points in a series. **JS index starts at 0 instead of 1**.
+
+# Nuclear bomb detonations over the years among countries
+
+Next we will turn to the classic barplot for exploring the changes in detonations over the years using the ggplot2 library as we create our very own color palette in a "nuclear" style. We will call them `scale_*_radioactive` The following flow chart should facilitate process of understanding:
+
+## Creating custom color palette
+
+```{mermaid}
+flowchart TD
+        A[Define a sequence of named colors]:::step1-->|called by|B["`radioactive_cols()`"]:::step1
+        B-->C[Assign these colors to named palettes. i.e. main]:::step2
+        C-->|called by|F["`radioactive_pal()`"]:::step2
+        D["`use colorRampPalette() for color interpolation`"]-->|in|F
+        E["`scale_*_radioactive() refers to these palette`"]:::step3-->|referred from|F
+        F-.->|returns|G[a function 
+        for interpolation]
+        B-.->|returns|H[defined colors]
+        classDef step1 fill:#37a, color:#fff
+        classDef step2 fill:#1aa, color:#fff
+        classDef step3 fill:#ff1, color:#000
+```
+
+The code then will be:
+
+```{r, radioactive palette}
+#' Function to extract drsimonj colors as hex codes
+#'
+#' @param ... Character names of radioactive_colors 
+#' @return character vector of defined color hex codes
+#'
+radioactive_cols <- function(...) {
+        radioactive_colors <- c(`red`               = "#BC1A10", 
+                                `orange`            = "#FFC901", 
+                                `gorse`             = "#F7FF56", 
+                                `charteuse`         = "#94FC13", 
+                                `turqoise`          = "#4BE3AC", 
+                                `caribbean green`   = "#00BDAA", 
+                                `electric violet`   = "#951DED")
+        cols <- c(...)
+        
+        if(is.null(cols)) 
+                return(radioactive_colors)
+        
+        radioactive_colors[cols]
+}
+
+
+#' Return function to interpolate a radioactive color palette
+#'
+#' @param palette Character name of palette in radioactive_colors
+#' @param reverse Boolean indicating whether the palette should be reversed
+#' @param ... Additional arguments to pass to colorRampPalette()
+#' @return A function for color interpolation
+#'
+radioactive_pal <- function(palette = "main", reverse = FALSE, ...) {
+        
+        radioactive_palettes <- list( # <1>
+                `main`  = radioactive_cols("gorse", "turqoise", "electric violet"), # <1>
+                `mixed` = radioactive_cols("gorse", "charteuse", "turqoise", # <1> 
+                                           "caribbean green", "electric violet"), # <1>
+                `hot`   = radioactive_cols("red", "orange") # <1>
+        ) # <1>
+        pal <- radioactive_palettes[[palette]]
+        
+        if(reverse) pal <- rev(pal)
+        
+        colorRampPalette(pal, ...)
+}
+
+#' Color scale constructor for radioactive colors
+#'
+#' @param palette Character name of palette in radioactive_colors
+#' @param discrete Boolean indicating whether color aesthetic is discrete or not
+#' @param reverse Boolean indicating whether the palette should be reversed
+#' @param ... Additional arguments passed to \code{discrete_scale()} or
+#'            \code{scale_color_gradientn()}, used respectively when discrete is
+#'            TRUE or FALSE
+#'
+scale_color_radioactive <- function(palette = "main", discrete = TRUE, reverse = FALSE, ...) {
+        pal <- radioactive_pal(palette = palette, reverse = reverse) # <2>
+        
+        if(discrete) {
+                ggplot2::discrete_scale("color", paste0("radioactive_", palette),  
+                                        palette = pal, # <2>
+                                        ...)
+        } else {
+                ggplot2::scale_color_gradientn(colours = pal(256), # <2>
+                                               ...)
+        }
+}
+
+#' Fill scale constructor for radioactive colors
+#'
+#' @param palette Character name of palette in radioactive_colors
+#' @param discrete Boolean indicating whether color aesthetic is discrete or not
+#' @param reverse Boolean indicating whether the palette should be reversed
+#' @param ... Additional arguments passed to discrete_scale() or
+#'   scale_fill_gradientn(), used respectively when discrete is TRUE or FALSE
+#'   
+scale_fill_radioactive <- function(palette = "main", discrete = TRUE, reverse = FALSE, ...) {
+        pal <- radioactive_pal(palette = palette, reverse = reverse)
+        
+        if(discrete) {
+                ggplot2::discrete_scale("fill", paste0("radioactive_", palette), 
+                                        palette = pal, ...)
+        } else {
+                ggplot2::scale_fill_gradientn(colours = pal(256), ...)
+        }
+}
+
+```
+
+1.  Define your palette with chosen colors.
+2.  Make sure a function input for the `palette` argument.
+
+## Prepare Data
+
+```{r, barplot data}
+explosions_depth <- nuclear_explosions %>% 
+        mutate(
+                type = ifelse(grepl("SHAFT|MINE|U[G|W]|TUNNEL|GALLERY", type), "U", "A"), 
+                purpose = fct_lump_min(purpose, min = 100)
+        ) %>% 
+        select(year, country, type) %>% 
+        count(year, country, type) %>% 
+        mutate(n = ifelse(type == "U", -n, n))
+```
+
+## First Barplot
+
+```{r, barplot}
+#| fig-width: 12
+#| lightbox: true
+#| warning: false
+
+
+p <- ggplot() + 
+        geom_bar(data = explosions_depth, aes(x = year, y = n, col = country), 
+                 stat = "identity", fill = NA) +
+        scale_color_radioactive() + # <3>
+        scale_x_continuous("", breaks = seq(1945, 2000, 1), expand = c(0.03, 0)) +
+        scale_y_continuous(labels = \(x) abs(x)) +
+        guides(color = guide_legend(ncol = 2))
+p
+```
+
+3.  Use your new scale function as per usual.
+
+## Decorations & Annotations
+
+```{r, barplot annotations}
+#| warning: false
+#| fig-width: 12
+#| fig-height: 8
+#| lightbox: true
+
+
+sysfonts::font_add("Baskerville", regular = "../../../static/font/Baskervville-Regular.ttf") # <4>
+showtext::showtext_auto() # <4>
+
+annotations <- tibble( # <5>
+        x1 = c(1963, 1996, NA, NA), y1 = c(5, 0, NA, NA),
+        x2 = c(1963, 1996, NA, NA), y2 = c(110, 105, NA, NA),
+        x3 = c(1964, 1994.5, NA, NA), y3 = c(110, 105, NA, NA),
+        xtext = c(1968, 1989, 1946, 1946), ytext = c(104, 102, 115, -55),
+        text = c("**Partial Test Ban Treaty**<br>prohibiting tests in atmosphere,
+                               <br>outer space, and underwater",
+                 "**Comprehensive Test Ban Treaty**<br>prohibiting all tests",
+                 "**Atmopsheric**", "**Underground**")
+) # <5>
+
+p + 
+        geom_segment(data = annotations, aes(x = x1, y = y1, xend = x2, yend = y2),
+                     col = "white") +
+        geom_segment(data = annotations, aes(x = x1, xend = x3, y = y3, yend = y3),
+                     col = "white") +
+        ggtext::geom_richtext( # <6>
+                data = annotations, # <6>
+                aes(x = xtext, y = ytext, label = text), # <6>
+                size = 5.5, fill = NA, color = "white", label.color = NA, # <6>
+                      family = "Baskerville") + # <6>
+        theme_minimal(base_size = 16, 
+                      base_family = "Baskerville") +
+                labs(
+                        x = "", 
+                        y = "", 
+                        title = str_to_title("the number of nuclear explosions"),
+                        subtitle = str_wrap("A re-design for statistical chart in SIPRI report (2000) tallying 
+                                 the number of nuclear explosions conducted by countries 
+                                 in the air and under ground.", 85), 
+                        caption = "data: Stockholm International Peace Research Institute|graph: @chucc900"
+                ) +
+        theme(
+                plot.background = element_rect("#000000"),
+                panel.background = element_rect("#000000"), # <7>
+                panel.grid.minor = element_blank(), # <7>
+                panel.grid.major.x = element_blank(), # <7>
+                legend.background = element_rect(fill = "#000"), # <8>
+                legend.position = c(0.7, 0.68), # <8>
+                legend.text = element_text(size = 20, margin = margin(0, 5, -1, 0)), # <8>
+                legend.title = element_blank(), # <8>
+                legend.key = element_rect(fill = "#000000"), # <8>
+                legend.key.size = unit(.8, "cm"), # <8>
+                text = element_text(color = "white"), 
+                axis.text = element_text(color = "white"),
+                axis.text.x = element_text(angle = 90), 
+                axis.line.y = element_line(color = "white"),
+                plot.margin = margin(40, 40, 10, 10),
+                plot.title = element_text(size = 30, color = radioactive_cols()["gorse"], 
+                                          face = "bold"),
+                plot.subtitle = element_text(size = 20)
+        )
+```
+
+4.  Import your local font before telling ggplot2 to call it for text.
+5.  Here we hardcode our annotations in the form of tabular data.
+6.  `ggtext::geom_richtext()` accepts markdown text format.
+7.  `panel.*` arguments control the elements inside the axis area.
+8.  `legend.*` arguments control the legend elements.
